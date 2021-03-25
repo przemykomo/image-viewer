@@ -35,7 +35,11 @@ void windowRefreshCallback(GLFWwindow* window) {
     draw(window);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc <= 1) {
+        return 0;
+    }
+
     glfwSetErrorCallback(debug::errorCallback);
 
     if (!glfwInit()) {
@@ -70,7 +74,7 @@ int main() {
     shaders::createBuffers(&VAO, &VBO, &EBO);
 
     int width, height, nrChannels;
-    unsigned char* data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &nrChannels, 0);
     if (data == nullptr) {
         std::cerr << "Cannot load texture!\n";
     } else {
