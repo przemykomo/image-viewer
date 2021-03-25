@@ -1,3 +1,5 @@
+#include "debug.h"
+#include "shaders.h"
 #define GLFW_INCLUDE_NONE
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
@@ -5,15 +7,8 @@
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include <glbinding-aux/debug.h>
-#include <glbinding/FunctionCall.h>
-#include <glbinding/AbstractFunction.h>
 
 using namespace gl;
-
-void errorCallback(int error, const char* description) {
-    std::cerr << description;
-}
 
 void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -34,26 +29,8 @@ void windowRefreshCallback(GLFWwindow* window) {
 
 unsigned int shaderProgram{0};
 
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec2 pos;\n"
-    "layout (location = 1) in vec2 inTexCoord;\n"
-    "out vec2 TexCoord;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(pos, 0.0f, 1.0f);\n"
-    "   TexCoord = inTexCoord;\n"
-    "}\0";
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec2 TexCoord;\n"
-    "uniform sampler2D ourTexture;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = texture(ourTexture, TexCoord);\n"
-    "}\n\0";
-
 int main() {
-    glfwSetErrorCallback(errorCallback);
+    glfwSetErrorCallback(debug::errorCallback);
 
     if (!glfwInit()) {
         std::cerr << "Cannot initialize GLFW!\n";
@@ -77,58 +54,11 @@ int main() {
     glfwSwapInterval(0);
 
     glbinding::initialize(glfwGetProcAddress);
-    
-    glbinding::setCallbackMask(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue);
-    glbinding::setAfterCallback([](const glbinding::FunctionCall & call)
-            {
-                if (std::string_view(call.function->name()).compare("glGetError")) {
-                    std::cout << call.function->name() << "(";
-                    for (unsigned i = 0; i < call.parameters.size(); ++i) {
-                        std::cout << call.parameters[i].get();
-                        if (i < call.parameters.size() - 1) {
-                            std::cout << ", ";
-                        }
-                    }
-                    std::cout << ")";
+    debug::init();
 
-                    if (call.returnValue) {
-                        std::cout << " -> " << call.returnValue.get();
-                    }
+    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
 
-                    std::cout << "; glGetError() -> " << (unsigned int)glGetError() << std::endl; 
-                }
-            });
-
-    glClearColor(0.0f, 1.0f, 0.7f, 1.0f);
-
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    std::cout << "VERTEX SHADER LOG:\n" << infoLog << std::endl;
-
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-    std::cout << "FRAGMENT SHADER LOG:\n" << infoLog << std::endl;
-    
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-    std::cout << "SHADER PROGRAM LOG:\n" << infoLog << std::endl;
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    shaderProgram = shaders::createProgram();
     
     float vertices[] = {
         // position         // texture coords
@@ -137,12 +67,14 @@ int main() {
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
         -0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left
     };
+
     unsigned int indices[] = {
         0, 1, 3,
         1, 2, 3
     };
 
-    unsigned int VBO, VAO, EBO;
+    unsigned int VAO, VBO, EBO;
+    shaders::createBuffers(&VAO, &VBO, &EBO);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
