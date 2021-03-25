@@ -2,24 +2,29 @@
 #include <glbinding/gl/gl.h>
 #include <iostream>
 
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec2 pos;\n"
-    "layout (location = 1) in vec2 inTexCoord;\n"
-    "out vec2 TexCoord;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(pos, 0.0f, 1.0f);\n"
-    "   TexCoord = inTexCoord;\n"
-    "}\0";
+const char *vertexShaderSource{R"(
+    #version 330 core
+    layout (location = 0) in vec2 pos;
+    layout (location = 1) in vec2 inTexCoord;
 
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec2 TexCoord;\n"
-    "uniform sampler2D ourTexture;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = texture(ourTexture, TexCoord);\n"
-    "}\n\0";
+    out vec2 TexCoord;
+
+    void main() {
+       gl_Position = vec4(pos, 0.0f, 1.0f);
+       TexCoord = inTexCoord;
+    }
+)"};
+
+const char *fragmentShaderSource{R"(
+    #version 330 core
+    out vec4 FragColor;
+    in vec2 TexCoord;
+    uniform sampler2D image;
+
+    void main() {
+       FragColor = texture(image, TexCoord);
+    }
+)"};
 
 namespace shaders {
     using namespace gl;
@@ -58,11 +63,11 @@ namespace shaders {
 
 
     const float vertices[] = {
-        // position         // texture coords
-         0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left
+        // position   // texture coords
+         1.0f,  1.0f, 1.0f, 1.0f, // top right
+         1.0f, -1.0f, 1.0f, 0.0f, // bottom right
+        -1.0f, -1.0f, 0.0f, 0.0f, // bottom left
+        -1.0f,  1.0f, 0.0f, 1.0f  // top left
     };
 
     const unsigned int indices[] = {
@@ -80,9 +85,23 @@ namespace shaders {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
         glEnableVertexAttribArray(1);
+    }
+
+    void createTexture(unsigned int shaderProgram) {
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glUseProgram(shaderProgram);
+        glUniform1i(glGetUniformLocation(shaderProgram, "image"), 0);
     }
 }

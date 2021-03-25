@@ -10,6 +10,9 @@
 
 using namespace gl;
 
+unsigned int shaderProgram{0};
+float imageAspectRatio{1.0f}; // height / width
+
 void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, 1);
@@ -19,15 +22,18 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
 void draw(GLFWwindow* window);
 
 void windowSizeCallback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
+    if (width < height) {
+        glViewport(0, 0, width, width * imageAspectRatio);
+    } else {
+        glViewport(0, 0, height / imageAspectRatio, height);
+    }
+
     draw(window);
 }
 
 void windowRefreshCallback(GLFWwindow* window) {
     draw(window);
 }
-
-unsigned int shaderProgram{0};
 
 int main() {
     glfwSetErrorCallback(debug::errorCallback);
@@ -60,34 +66,8 @@ int main() {
 
     shaderProgram = shaders::createProgram();
     
-    float vertices[] = {
-        // position         // texture coords
-         0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left
-    };
-
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
-    };
-
     unsigned int VAO, VBO, EBO;
     shaders::createBuffers(&VAO, &VBO, &EBO);
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
     int width, height, nrChannels;
     unsigned char* data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
@@ -95,19 +75,11 @@ int main() {
         std::cerr << "Cannot load texture!\n";
     } else {
         std::cout << "Texture width: " << width << ", height: " << height << '\n';
+        imageAspectRatio = (float)height / width;
     }
 
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    shaders::createTexture(shaderProgram);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glUseProgram(shaderProgram);
-    glUniform1i(glGetUniformLocation(shaderProgram, "ourTexture"), 0);
     stbi_image_free(data);
 
     draw(window);

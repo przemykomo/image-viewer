@@ -3,4 +3,5 @@
 namespace shaders {
     unsigned int createProgram();
     void createBuffers(unsigned int* VAO, unsigned int* VBO, unsigned int* EBO);
+    void createTexture(unsigned int shaderProgram);
 }
