@@ -22,7 +22,7 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
 void draw(GLFWwindow* window);
 
 void windowSizeCallback(GLFWwindow* window, int width, int height) {
-    if (width < height) {
+    if (height > width * imageAspectRatio) {
         glViewport(0, 0, width, width * imageAspectRatio);
     } else {
         glViewport(0, 0, height / imageAspectRatio, height);
