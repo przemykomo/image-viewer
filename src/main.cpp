@@ -73,6 +73,7 @@ int main(int argc, char* argv[]) {
     unsigned int VAO, VBO, EBO;
     shaders::createBuffers(&VAO, &VBO, &EBO);
 
+    stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels;
     unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &nrChannels, 0);
     if (data == nullptr) {
