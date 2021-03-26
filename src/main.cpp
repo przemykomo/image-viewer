@@ -40,6 +40,16 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &nrChannels, 0);
+    if (data == nullptr) {
+        std::cerr << "Cannot load texture!\n";
+        return 1;
+    }
+
+    imageAspectRatio = (float)height / width;
+
     debug::initGLFW();
 
     if (!glfwInit()) {
@@ -47,9 +57,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    const GLFWvidmode* vidMode{ glfwGetVideoMode(glfwGetPrimaryMonitor()) };
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Image viewer", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width * vidMode->height / 1080 * 480 / 1080, height * vidMode->height / 1080 * 480 / 1080, "Image viewer", NULL, NULL);
 
     if (!window) {
         glfwTerminate();
@@ -73,14 +85,6 @@ int main(int argc, char* argv[]) {
     unsigned int VAO, VBO, EBO;
     shaders::createBuffers(&VAO, &VBO, &EBO);
 
-    stbi_set_flip_vertically_on_load(true);
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &nrChannels, 0);
-    if (data == nullptr) {
-        std::cerr << "Cannot load texture!\n";
-        return 1;
-    }
-
     GLenum format;
     switch (nrChannels) {
         case 1:
@@ -96,8 +100,6 @@ int main(int argc, char* argv[]) {
             format = GL_RGBA;
             break;
     }
-
-    imageAspectRatio = (float)height / width;
 
     shaders::createTexture(shaderProgram);
 
