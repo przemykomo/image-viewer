@@ -78,12 +78,29 @@ int main(int argc, char* argv[]) {
     if (data == nullptr) {
         std::cerr << "Cannot load texture!\n";
         return 1;
-    } else {
-        imageAspectRatio = (float)height / width;
     }
 
+    GLenum format;
+    switch (nrChannels) {
+        case 1:
+            format = GL_RED;
+            break;
+        case 2:
+            format = GL_RG;
+            break;
+        case 3:
+            format = GL_RGB;
+            break;
+        case 4:
+            format = GL_RGBA;
+            break;
+    }
+
+    imageAspectRatio = (float)height / width;
+
     shaders::createTexture(shaderProgram);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
     draw(window);
