@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=piv
+GenericName=Image Viewer
+Exec=piv %F
+MimeType=image/bmp;image/gif;image/jpeg;image/jpg;image/png;
+NoDisplay=true
