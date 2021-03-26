@@ -32,29 +32,39 @@ namespace shaders {
         unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
         glCompileShader(vertexShader);
+
+#ifdef DEBUG
         // check for shader compile errors
         int success;
         char infoLog[512];
         glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
         std::cout << "VERTEX SHADER LOG:\n" << infoLog << std::endl;
+#endif
 
         unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
         glCompileShader(fragmentShader);
+
+#ifdef DEBUG
         // check for shader compile errors
         glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::cout << "FRAGMENT SHADER LOG:\n" << infoLog << std::endl;
-        
+#endif
+
         unsigned int shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);
         glAttachShader(shaderProgram, fragmentShader);
         glLinkProgram(shaderProgram);
+
+#ifdef DEBUG
         // check for linking errors
         glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "SHADER PROGRAM LOG:\n" << infoLog << std::endl;
+#endif
+
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 

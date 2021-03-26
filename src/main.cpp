@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    glfwSetErrorCallback(debug::errorCallback);
+    debug::initGLFW();
 
     if (!glfwInit()) {
         std::cerr << "Cannot initialize GLFW!\n";
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     glfwSwapInterval(0);
 
     glbinding::initialize(glfwGetProcAddress);
-    debug::init();
+    debug::initOpenGL();
 
     glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -77,8 +77,8 @@ int main(int argc, char* argv[]) {
     unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &nrChannels, 0);
     if (data == nullptr) {
         std::cerr << "Cannot load texture!\n";
+        return 1;
     } else {
-        std::cout << "Texture width: " << width << ", height: " << height << '\n';
         imageAspectRatio = (float)height / width;
     }
 

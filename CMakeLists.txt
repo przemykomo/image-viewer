@@ -18,5 +18,9 @@ find_package(glbinding REQUIRED)
 target_link_libraries(piv
     ${GLFW_LIBRARIES}  
     glbinding::glbinding
-    glbinding::glbinding-aux
 )
+
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_link_libraries(piv glbinding::glbinding-aux)
+    add_compile_definitions(DEBUG)
+endif()
