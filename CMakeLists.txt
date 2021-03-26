@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(image_viewer VERSION 1.0)
+project(piv VERSION 1.0)
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp CMAKE_CONFIGURE_DEPENDS)
-add_executable(image_viewer ${SRC_FILES})
+add_executable(piv ${SRC_FILES})
 
-target_include_directories(image_viewer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(piv PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
@@ -15,7 +15,7 @@ include_directories(${GLFW_INCLUDE_DIRS})
 
 find_package(glbinding REQUIRED)
 
-target_link_libraries(image_viewer 
+target_link_libraries(piv
     ${GLFW_LIBRARIES}  
     glbinding::glbinding
     glbinding::glbinding-aux
