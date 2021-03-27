@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
     }
 
     stbi_set_flip_vertically_on_load(true);
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &nrChannels, 0);
+    int width, height, comp;
+    unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &comp, STBI_rgb_alpha);
     if (data == nullptr) {
         std::cerr << "Cannot load texture!\n";
         return 1;
@@ -85,25 +85,10 @@ int main(int argc, char* argv[]) {
     unsigned int VAO, VBO, EBO;
     shaders::createBuffers(&VAO, &VBO, &EBO);
 
-    GLenum format;
-    switch (nrChannels) {
-        case 1:
-            format = GL_RED;
-            break;
-        case 2:
-            format = GL_RG;
-            break;
-        case 3:
-            format = GL_RGB;
-            break;
-        case 4:
-            format = GL_RGBA;
-            break;
-    }
-
     shaders::createTexture(shaderProgram);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
     draw(window);
