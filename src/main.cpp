@@ -79,6 +79,8 @@ int main(int argc, char* argv[]) {
     debug::initOpenGL();
 
     glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     shaderProgram = shaders::createProgram();
     
