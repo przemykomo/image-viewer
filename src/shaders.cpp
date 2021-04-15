@@ -13,11 +13,10 @@ namespace shaders {
 
         out vec2 TexCoord;
 
-        uniform float imageAspectRatio; //height / width
-        uniform float windowAspectRatio;
+        uniform mat4 projection;
 
         void main() {
-           gl_Position = vec4(pos, 0.0f, 1.0f);
+           gl_Position = projection * vec4(pos, 0.0f, 1.0f);
            TexCoord = inTexCoord;
         }
     )"};

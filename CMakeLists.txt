@@ -14,6 +14,7 @@ pkg_search_module(GLFW REQUIRED glfw3)
 include_directories(${GLFW_INCLUDE_DIRS})
 
 find_package(glbinding REQUIRED)
+find_package(glm REQUIRED)
 
 target_link_libraries(piv
     ${GLFW_LIBRARIES}  

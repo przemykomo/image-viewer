@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "shaders.h"
+#include <glm/ext/matrix_float4x4.hpp>
 #define GLFW_INCLUDE_NONE
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
@@ -7,6 +8,9 @@
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace gl;
 
@@ -22,11 +26,16 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
 void draw(GLFWwindow* window);
 
 void windowSizeCallback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+
+    glm::mat4 projection = glm::identity<glm::mat4>();
     if (height > width * imageAspectRatio) {
-        glViewport(0, 0, width, width * imageAspectRatio);
+        projection = glm::scale(projection, glm::vec3(1, width * imageAspectRatio / height, 1));
     } else {
-        glViewport(0, 0, height / imageAspectRatio, height);
+        projection = glm::scale(projection, glm::vec3(height / (imageAspectRatio * width), 1, 1));
     }
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     draw(window);
 }
