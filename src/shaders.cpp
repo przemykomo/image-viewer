@@ -2,74 +2,36 @@
 #include <glbinding/gl/gl.h>
 #include <iostream>
 
-const char *vertexShaderSource{R"(
-    #version 330 core
-    layout (location = 0) in vec2 pos;
-    layout (location = 1) in vec2 inTexCoord;
-
-    out vec2 TexCoord;
-
-    void main() {
-       gl_Position = vec4(pos, 0.0f, 1.0f);
-       TexCoord = inTexCoord;
-    }
-)"};
-
-const char *fragmentShaderSource{R"(
-    #version 330 core
-    out vec4 FragColor;
-    in vec2 TexCoord;
-    uniform sampler2D image;
-
-    void main() {
-       FragColor = texture(image, TexCoord);
-    }
-)"};
 
 namespace shaders {
     using namespace gl;
-    unsigned int createProgram() {
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-        glCompileShader(vertexShader);
 
-#ifdef DEBUG
-        // check for shader compile errors
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "VERTEX SHADER LOG:\n" << infoLog << std::endl;
-#endif
+    const char *vertexShaderSource{R"(
+        #version 330 core
+        layout (location = 0) in vec2 pos;
+        layout (location = 1) in vec2 inTexCoord;
 
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-        glCompileShader(fragmentShader);
+        out vec2 TexCoord;
 
-#ifdef DEBUG
-        // check for shader compile errors
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "FRAGMENT SHADER LOG:\n" << infoLog << std::endl;
-#endif
+        uniform float imageAspectRatio; //height / width
+        uniform float windowAspectRatio;
 
-        unsigned int shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
+        void main() {
+           gl_Position = vec4(pos, 0.0f, 1.0f);
+           TexCoord = inTexCoord;
+        }
+    )"};
 
-#ifdef DEBUG
-        // check for linking errors
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "SHADER PROGRAM LOG:\n" << infoLog << std::endl;
-#endif
+    const char *fragmentShaderSource{R"(
+        #version 330 core
+        out vec4 FragColor;
+        in vec2 TexCoord;
+        uniform sampler2D image;
 
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        return shaderProgram;
-    }
+        void main() {
+           FragColor = texture(image, TexCoord);
+        }
+    )"};
 
 
     const float vertices[] = {
@@ -84,6 +46,46 @@ namespace shaders {
         0, 1, 3,
         1, 2, 3
     };
+
+    unsigned int createShader(GLenum type, const GLchar* const* source) {
+        unsigned int shader = glCreateShader(type);
+        glShaderSource(shader, 1, source, NULL);
+        glCompileShader(shader);
+
+#ifdef DEBUG
+        // check for shader compile errors
+        int success;
+        char infoLog[512];
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        std::cout << "SHADER LOG:\n" << infoLog << std::endl;
+#endif
+        return shader;
+    }
+
+    unsigned int createProgram() {
+        unsigned int vertexShader = createShader(GL_VERTEX_SHADER, &vertexShaderSource);
+        unsigned int fragmentShader = createShader(GL_FRAGMENT_SHADER, &fragmentShaderSource);
+
+        unsigned int shaderProgram = glCreateProgram();
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, fragmentShader);
+        glLinkProgram(shaderProgram);
+
+#ifdef DEBUG
+        // check for linking errors
+        int success;
+        char infoLog[512];
+        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "SHADER PROGRAM LOG:\n" << infoLog << std::endl;
+#endif
+
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+
+        return shaderProgram;
+    }
 
     void createBuffers(unsigned int* VAO, unsigned int* VBO, unsigned int* EBO) {
         glGenVertexArrays(1, VAO);
