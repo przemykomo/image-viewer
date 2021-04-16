@@ -16,14 +16,67 @@ using namespace gl;
 
 unsigned int shaderProgram{0};
 float imageAspectRatio{1.0f}; // height / width
-
-void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, 1);
-    }
-}
+//TODO: vim-like number + arrow moves X times to some direction
+glm::mat4 movementMatrix = glm::identity<glm::mat4>();
 
 void draw(GLFWwindow* window);
+
+void translateImage(float x, float y, GLFWwindow* window) {
+    movementMatrix = glm::translate(movementMatrix, glm::vec3(x, y, 0.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
+    draw(window);
+}
+
+void scaleImage(float s, GLFWwindow* window) {
+    movementMatrix = glm::scale(movementMatrix, glm::vec3(s, s, 0.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
+    draw(window);
+}
+
+void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods) {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        if (mods & 1) {
+            switch (key) {
+                case GLFW_KEY_UP:
+                case GLFW_KEY_K:
+                    scaleImage(2.0f, window);
+                    break;
+                case GLFW_KEY_DOWN:
+                case GLFW_KEY_J:
+                    scaleImage(0.5f, window);
+                    break;
+            }
+        } else {
+            switch (key) {
+                case GLFW_KEY_ESCAPE:
+                case GLFW_KEY_Q:
+                    glfwSetWindowShouldClose(window, 1);
+                    break;
+                case GLFW_KEY_RIGHT:
+                case GLFW_KEY_L:
+                    translateImage(-0.05f, 0.0f, window);
+                    break;
+                case GLFW_KEY_LEFT:
+                case GLFW_KEY_H:
+                    translateImage(0.05f, 0.0f, window);
+                    break;
+                case GLFW_KEY_UP:
+                case GLFW_KEY_K:
+                    translateImage(0.0f, -0.05f, window);
+                    break;
+                case GLFW_KEY_DOWN:
+                case GLFW_KEY_J:
+                    translateImage(0.0f, 0.05f, window);
+                    break;
+                case GLFW_KEY_R:
+                    movementMatrix = glm::identity<glm::mat4>();
+                    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
+                    draw(window);
+                    break;
+            }
+        }
+    }
+}
 
 void windowSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -102,6 +155,7 @@ int main(int argc, char* argv[]) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
     draw(window);
 
     while (!glfwWindowShouldClose(window)) {

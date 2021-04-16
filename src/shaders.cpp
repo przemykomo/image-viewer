@@ -14,9 +14,10 @@ namespace shaders {
         out vec2 TexCoord;
 
         uniform mat4 projection;
+        uniform mat4 movement;
 
         void main() {
-           gl_Position = projection * vec4(pos, 0.0f, 1.0f);
+           gl_Position = projection * movement * vec4(pos, 0.0f, 1.0f);
            TexCoord = inTexCoord;
         }
     )"};
