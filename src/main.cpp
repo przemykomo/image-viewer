@@ -38,9 +38,11 @@ void translateImage(float x, float y, GLFWwindow* window) {
 }
 
 void scaleImage(float s, GLFWwindow* window) {
+    movementMatrix = glm::rotate(movementMatrix, -rotationAngle, ROTATION_AXIS);
     movementMatrix = glm::translate(movementMatrix, glm::vec3(-movement, 0.0f));
     movementMatrix = glm::scale(movementMatrix, glm::vec3(s, s, 0.0f));
     movementMatrix = glm::translate(movementMatrix, glm::vec3(movement, 0.0f));
+    movementMatrix = glm::rotate(movementMatrix, rotationAngle, ROTATION_AXIS);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
     draw(window);
 }
