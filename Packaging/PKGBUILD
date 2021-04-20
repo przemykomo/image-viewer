@@ -1,0 +1,20 @@
+# Maintainer: Przemyk <przemek@przemyk.xyz>
+pkgname=piv-bin
+pkgver=0.5
+pkgrel=1
+pkgdesc="A simple image viewer."
+arch=('x86_64')
+url="https://github.com/przemykomo/image-viewer"
+license=('GPL3')
+depends=(
+    'glfw'
+    'glbinding'
+)
+provides=("${pkgname/-bin/}")
+conflicts=("${pkgname/-bin/}")
+source=("https://github.com/przemykomo/image-viewer/releases/download/${pkgver}/${pkgname/-bin/}.tar.gz")
+md5sums=('28d27baf2fd6fea7dbef88f072616a5f')
+package() {
+    install -Dm 775 "${pkgname/-bin/}" "${pkgdir}/usr/bin/${pkgname/-bin/}"
+    install -D "${pkgname/-bin}.desktop" "${pkgdir}/usr/share/applications/${pkgname/-bin}.desktop"
+}
