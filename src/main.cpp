@@ -1,5 +1,8 @@
 #include "debug.h"
 #include "shaders.h"
+#include "draw.h"
+#include "movement.h"
+#include "callbacks.h"
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #define GLFW_INCLUDE_NONE
@@ -15,119 +18,9 @@
 
 using namespace gl;
 
-constexpr glm::vec3 ROTATION_AXIS = glm::vec3(0, 0, -1);
-
 unsigned int shaderProgram{0};
 float imageAspectRatio{1.0f}; // height / width
-
-//TODO: vim-like number + arrow moves X times to some direction
-glm::mat4 movementMatrix = glm::identity<glm::mat4>();
-float rotationAngle{0.0f};
-glm::vec2 movement{};
-
-void draw(GLFWwindow* window);
-
-void translateImage(float x, float y, GLFWwindow* window) {
-    movement.x += x;
-    movement.y += y;
-    movementMatrix = glm::rotate(movementMatrix, -rotationAngle, ROTATION_AXIS);
-    movementMatrix = glm::translate(movementMatrix, glm::vec3(x, y, 0.0f));
-    movementMatrix = glm::rotate(movementMatrix, rotationAngle, ROTATION_AXIS);
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
-    draw(window);
-}
-
-void scaleImage(float s, GLFWwindow* window) {
-    movementMatrix = glm::rotate(movementMatrix, -rotationAngle, ROTATION_AXIS);
-    movementMatrix = glm::translate(movementMatrix, glm::vec3(-movement, 0.0f));
-    movementMatrix = glm::scale(movementMatrix, glm::vec3(s, s, 0.0f));
-    movementMatrix = glm::translate(movementMatrix, glm::vec3(movement, 0.0f));
-    movementMatrix = glm::rotate(movementMatrix, rotationAngle, ROTATION_AXIS);
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
-    draw(window);
-}
-
-void rotateImage(float angle, GLFWwindow* window) {
-    rotationAngle += angle;
-    glm::mat4 rotationMatrix = glm::rotate(glm::identity<glm::mat4>(), rotationAngle, ROTATION_AXIS);
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "rotation"), 1, GL_FALSE, glm::value_ptr(rotationMatrix));
-    draw(window);
-}
-
-void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods) {
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (mods & 1) {
-            switch (key) {
-                case GLFW_KEY_UP:
-                case GLFW_KEY_K:
-                    scaleImage(2.0f, window);
-                    break;
-                case GLFW_KEY_DOWN:
-                case GLFW_KEY_J:
-                    scaleImage(0.5f, window);
-                    break;
-                case GLFW_KEY_RIGHT:
-                case GLFW_KEY_L:
-                    rotateImage(glm::radians(10.0f), window);
-                    break;
-                case GLFW_KEY_LEFT:
-                case GLFW_KEY_H:
-                    rotateImage(glm::radians(-10.0f), window);
-                    break;
-            }
-        } else {
-            switch (key) {
-                case GLFW_KEY_ESCAPE:
-                case GLFW_KEY_Q:
-                    glfwSetWindowShouldClose(window, 1);
-                    break;
-                case GLFW_KEY_RIGHT:
-                case GLFW_KEY_L:
-                    translateImage(-0.05f, 0.0f, window);
-                    break;
-                case GLFW_KEY_LEFT:
-                case GLFW_KEY_H:
-                    translateImage(0.05f, 0.0f, window);
-                    break;
-                case GLFW_KEY_UP:
-                case GLFW_KEY_K:
-                    translateImage(0.0f, -0.05f, window);
-                    break;
-                case GLFW_KEY_DOWN:
-                case GLFW_KEY_J:
-                    translateImage(0.0f, 0.05f, window);
-                    break;
-                case GLFW_KEY_R:
-                    movementMatrix = glm::identity<glm::mat4>();
-                    rotationAngle = 0.0f;
-                    movement = {0.0f, 0.0f};
-                    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
-                    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "rotation"), 1, GL_FALSE, glm::value_ptr(glm::identity<glm::mat4>()));
-                    draw(window);
-                    break;
-            }
-        }
-    }
-}
-
-void windowSizeCallback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-
-    glm::mat4 projection = glm::identity<glm::mat4>();
-    if (height > width * imageAspectRatio) {
-        projection = glm::scale(projection, glm::vec3(1, width * imageAspectRatio / height, 1));
-    } else {
-        projection = glm::scale(projection, glm::vec3(height / (imageAspectRatio * width), 1, 1));
-    }
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-    draw(window);
-}
-
-void windowRefreshCallback(GLFWwindow* window) {
-    draw(window);
-}
+extern glm::mat4 movementMatrix;
 
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
@@ -151,10 +44,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const GLFWvidmode* vidMode{ glfwGetVideoMode(glfwGetPrimaryMonitor()) };
-
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+    const GLFWvidmode* vidMode{ glfwGetVideoMode(glfwGetPrimaryMonitor()) };
     GLFWwindow* window = glfwCreateWindow(width * vidMode->height / 1080 * 480 / 1080, height * vidMode->height / 1080 * 480 / 1080, "Image viewer", NULL, NULL);
 
     if (!window) {
@@ -204,10 +97,3 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void draw(GLFWwindow* window) {
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glUseProgram(shaderProgram);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glfwSwapBuffers(window);
-}
