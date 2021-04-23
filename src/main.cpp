@@ -3,8 +3,9 @@
 #include "draw.h"
 #include "movement.h"
 #include "callbacks.h"
+#include "image.h"
 #include <glm/ext/matrix_float4x4.hpp>
-#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #define GLFW_INCLUDE_NONE
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
@@ -13,32 +14,29 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 using namespace gl;
 
 unsigned int shaderProgram{0};
-float imageAspectRatio{1.0f}; // height / width
 extern glm::mat4 movementMatrix;
+extern float imageAspectRatio;
 
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
         return 0;
     }
 
+    std::string_view fileName(argv[1]);
+    initDirectory(fileName.substr(0, fileName.find_last_of('/')));
+
     stbi_set_flip_vertically_on_load(true);
-    int width, height, comp;
-    unsigned char* data = stbi_load(argv[argc - 1], &width, &height, &comp, STBI_rgb_alpha);
+    int width, height;
+    unsigned char* data{ loadImage(argv[1], &width, &height) };
     if (data == nullptr) {
-        std::cerr << "Cannot load texture!\n";
+        std::cerr << "Cannot load image!\n";
         return 1;
     }
 
-    imageAspectRatio = (float)height / width;
-
     debug::initGLFW();
-
     if (!glfwInit()) {
         std::cerr << "Cannot initialize GLFW!\n";
         return 1;
@@ -57,9 +55,7 @@ int main(int argc, char* argv[]) {
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetKeyCallback(window, keyCallback);
-    glfwSetWindowSizeCallback(window, windowSizeCallback);
-    glfwSetWindowRefreshCallback(window, windowRefreshCallback);
+    setupCallbacks(window);
     glfwSwapInterval(0);
 
     glbinding::initialize(glfwGetProcAddress);
@@ -77,7 +73,7 @@ int main(int argc, char* argv[]) {
     shaders::createTexture(shaderProgram);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    storeImageInGPU(data, width, height);
     stbi_image_free(data);
 
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "movement"), 1, GL_FALSE, glm::value_ptr(movementMatrix));
@@ -90,6 +86,7 @@ int main(int argc, char* argv[]) {
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     glfwDestroyWindow(window);
 

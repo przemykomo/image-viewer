@@ -1,6 +1,7 @@
 #include "callbacks.h"
 #include "movement.h"
 #include "draw.h"
+#include "image.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -10,9 +11,26 @@ using namespace gl;
 extern unsigned int shaderProgram;
 extern float imageAspectRatio;
 
+void setupCallbacks(GLFWwindow* window) {
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSetWindowSizeCallback(window, windowSizeCallback);
+    glfwSetWindowRefreshCallback(window, windowRefreshCallback);
+}
+
 void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (mods & 1) {
+        if (mods & GLFW_MOD_ALT) {
+            switch (key) {
+                case GLFW_KEY_RIGHT:
+                case GLFW_KEY_L:
+                    nextImage(window);
+                    break;
+                case GLFW_KEY_LEFT:
+                case GLFW_KEY_H:
+                    previousImage(window);
+                    break;
+            }
+        } else if (mods & GLFW_MOD_SHIFT) {
             switch (key) {
                 case GLFW_KEY_UP:
                 case GLFW_KEY_K:
@@ -35,7 +53,7 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
             switch (key) {
                 case GLFW_KEY_ESCAPE:
                 case GLFW_KEY_Q:
-                    glfwSetWindowShouldClose(window, 1);
+                    glfwSetWindowShouldClose(window, true);
                     break;
                 case GLFW_KEY_RIGHT:
                 case GLFW_KEY_L:
