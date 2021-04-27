@@ -2,7 +2,6 @@
 #include <glbinding/gl/gl.h>
 #include <iostream>
 
-
 namespace shaders {
     using namespace gl;
 

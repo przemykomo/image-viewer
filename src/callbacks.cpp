@@ -23,11 +23,11 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
             switch (key) {
                 case GLFW_KEY_RIGHT:
                 case GLFW_KEY_L:
-                    nextImage(window);
+                    nextImageDraw(window);
                     break;
                 case GLFW_KEY_LEFT:
                 case GLFW_KEY_H:
-                    previousImage(window);
+                    previousImageDraw(window);
                     break;
             }
         } else if (mods & GLFW_MOD_SHIFT) {
@@ -81,16 +81,7 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
 
 void windowSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
-
-    glm::mat4 projection = glm::identity<glm::mat4>();
-    if (height > width * imageAspectRatio) {
-        projection = glm::scale(projection, glm::vec3(1, width * imageAspectRatio / height, 1));
-    } else {
-        projection = glm::scale(projection, glm::vec3(height / (imageAspectRatio * width), 1, 1));
-    }
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
+    updateProjectionMatrix(width, height);
     draw(window);
 }
 

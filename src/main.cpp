@@ -18,19 +18,22 @@ using namespace gl;
 
 unsigned int shaderProgram{0};
 extern glm::mat4 movementMatrix;
-extern float imageAspectRatio;
 
 int main(int argc, char* argv[]) {
-    if (argc <= 1) {
-        return 0;
+    stbi_set_flip_vertically_on_load(true);
+
+    int width, height;
+    unsigned char* data;
+
+    if (argc > 1) {
+        std::string_view fileName(argv[1]);
+        initDirectory(fileName.substr(0, fileName.find_last_of('/')));
+        data = loadImage(argv[1], &width, &height);
+    } else {
+        initDirectory("./");
+        data = nextImage(&width, &height);
     }
 
-    std::string_view fileName(argv[1]);
-    initDirectory(fileName.substr(0, fileName.find_last_of('/')));
-
-    stbi_set_flip_vertically_on_load(true);
-    int width, height;
-    unsigned char* data{ loadImage(argv[1], &width, &height) };
     if (data == nullptr) {
         std::cerr << "Cannot load image!\n";
         return 1;

@@ -11,5 +11,7 @@ inline void storeImageInGPU(unsigned char* data, int width, int height) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 }
 void initDirectory(std::string_view dir);
-void nextImage(GLFWwindow* window);
-void previousImage(GLFWwindow* window);
+unsigned char* nextImage(int* width, int* height);
+void nextImageDraw(GLFWwindow* window);
+void previousImageDraw(GLFWwindow* window);
+void updateProjectionMatrix(int width, int height);
