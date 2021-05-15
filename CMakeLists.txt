@@ -22,6 +22,7 @@ target_link_libraries(piv
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_compile_options(piv PUBLIC -ggdb)
     target_link_libraries(piv glbinding::glbinding-aux)
     add_compile_definitions(DEBUG)
 endif()
